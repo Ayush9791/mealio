@@ -1,4 +1,19 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const runtimeEnvBase = import.meta.env.VITE_API_URL;
+
+const resolveApiBaseUrl = () => {
+  if (runtimeEnvBase) return runtimeEnvBase;
+
+  if (import.meta.env.DEV) {
+    // Vite proxy target (see client/vite.config.js)
+    return '/api';
+  }
+
+  // Production fallback when no env is provided.
+  // If frontend and backend are deployed separately, set VITE_API_URL.
+  return '/api';
+};
+
+const API_BASE_URL = resolveApiBaseUrl();
 
 const getAuthHeaders = () => {
   const token = localStorage.getItem('mealio_token');
@@ -6,20 +21,29 @@ const getAuthHeaders = () => {
 };
 
 const request = async (endpoint, options = {}) => {
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-    headers: {
-      'Content-Type': 'application/json',
-      ...getAuthHeaders(),
-      ...(options.headers || {}),
-    },
-    ...options,
-  });
+  try {
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeaders(),
+        ...(options.headers || {}),
+      },
+      ...options,
+    });
 
-  const payload = await response.json().catch(() => ({}));
-  if (!response.ok) {
-    throw new Error(payload.message || 'Request failed');
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(payload.message || `Request failed (${response.status})`);
+    }
+    return payload;
+  } catch (error) {
+    if (error instanceof TypeError) {
+      throw new Error(
+        `Unable to connect to API at ${API_BASE_URL}. Ensure backend is running and VITE_API_URL is correct.`,
+      );
+    }
+    throw error;
   }
-  return payload;
 };
 
 export const api = {

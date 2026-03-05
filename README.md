@@ -74,3 +74,16 @@ Expected response:
 ```json
 {"status":"ok"}
 ```
+
+
+## Fix "Failed to fetch" on Signup/Login
+
+If the UI shows `Failed to fetch`, the browser could not reach the API.
+
+1. Start backend first (`cd server && npm install && npm run dev`).
+2. Start frontend (`cd client && npm install && npm run dev`).
+3. For local development, this repo now uses a Vite proxy so frontend calls `/api` and forwards to `http://localhost:5000`.
+4. If frontend/backend are on different hosts (e.g., Netlify + Render), set `VITE_API_URL` in frontend env to your backend URL, e.g.:
+   ```env
+   VITE_API_URL=https://your-backend.example.com/api
+   ```
