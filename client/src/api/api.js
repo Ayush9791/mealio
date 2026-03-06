@@ -1,5 +1,3 @@
-import { completeListing } from "../../../server/controllers/listingController";
-
 const runtimeEnvBase = import.meta.env.VITE_API_URL;
 
 const resolveApiBaseUrl = () => {
