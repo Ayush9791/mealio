@@ -8,7 +8,10 @@ export default function NGO() {
 
   const [listings, setListings] = useState([]);
   const [location, setLocation] = useState(null);
+  const [tab, setTab] = useState("available");
   const [message, setMessage] = useState({ type: "info", text: "" });
+
+  const ngoId = localStorage.getItem("mealio_user_id");
 
   const getLocation = () => {
     if (!navigator.geolocation) {
@@ -50,14 +53,11 @@ export default function NGO() {
     try {
 
       const data = await api.getListings();
-
-      let available = data.listings.filter(
-        (listing) => listing.status === "available"
-      );
+      let all = data.listings;
 
       if (location) {
 
-        available = available.map((listing) => ({
+        all = all.map((listing) => ({
           ...listing,
           distance: haversine(
             location.lat,
@@ -67,10 +67,9 @@ export default function NGO() {
           )
         }));
 
-        available.sort((a, b) => a.distance - b.distance);
       }
 
-      setListings(available);
+      setListings(all);
 
     } catch (error) {
       setMessage({ type: "error", text: error.message });
@@ -82,13 +81,12 @@ export default function NGO() {
   }, []);
 
   useEffect(() => {
-    if (location) {
-      loadListings();
-    }
+    if (location) loadListings();
   }, [location]);
 
   const handleAccept = async (listingId) => {
     try {
+
       await api.acceptListing({ listingId });
 
       setMessage({
@@ -103,7 +101,62 @@ export default function NGO() {
     }
   };
 
-  const totalAvailable = listings.length;
+  const handleComplete = async (listingId) => {
+    try {
+
+      await api.completeListing({ listingId });
+
+      setMessage({
+        type: "success",
+        text: "Listing marked as completed"
+      });
+
+      loadListings();
+
+    } catch (error) {
+      setMessage({ type: "error", text: error.message });
+    }
+  };
+
+  const availableListings = listings
+    .filter((l) => l.status === "available")
+    .sort((a, b) => (a.distance || 0) - (b.distance || 0));
+
+  const acceptedListings = listings.filter(
+    (l) => l.status === "accepted" && l.accepted_by === ngoId
+  );
+
+  const pastListings = listings.filter(
+    (l) => l.status === "completed" || l.status === "expired"
+  );
+
+  const renderListings = () => {
+
+    let data = [];
+
+    if (tab === "available") data = availableListings;
+    if (tab === "accepted") data = acceptedListings;
+    if (tab === "past") data = pastListings;
+
+    if (data.length === 0) {
+      return (
+        <p className="text-gray-600">
+          No listings found.
+        </p>
+      );
+    }
+
+    return data.map((listing) => (
+      <ListingCard
+        key={listing.id}
+        listing={listing}
+        canAccept={tab === "available"}
+        canComplete={tab === "accepted"}
+        onAccept={handleAccept}
+        onComplete={handleComplete}
+      />
+    ));
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -112,12 +165,11 @@ export default function NGO() {
 
       <main className="max-w-5xl mx-auto p-6">
 
-        {/* Stats */}
         <div className="grid grid-cols-2 gap-4 mb-6">
 
           <div className="bg-white border rounded-lg p-4">
             <p className="text-gray-500 text-sm">Nearby Listings</p>
-            <p className="text-2xl font-bold">{totalAvailable}</p>
+            <p className="text-2xl font-bold">{availableListings.length}</p>
           </div>
 
           <div className="bg-white border rounded-lg p-4">
@@ -129,9 +181,30 @@ export default function NGO() {
 
         </div>
 
-        <h1 className="text-2xl font-semibold mb-4">
-          Available Food Listings
-        </h1>
+        <div className="flex gap-4 mb-6">
+
+          <button
+            className={`px-4 py-2 rounded ${tab === "available" ? "bg-emerald-600 text-white" : "bg-gray-200"}`}
+            onClick={() => setTab("available")}
+          >
+            Available Listings
+          </button>
+
+          <button
+            className={`px-4 py-2 rounded ${tab === "accepted" ? "bg-emerald-600 text-white" : "bg-gray-200"}`}
+            onClick={() => setTab("accepted")}
+          >
+            Accepted Listings
+          </button>
+
+          <button
+            className={`px-4 py-2 rounded ${tab === "past" ? "bg-emerald-600 text-white" : "bg-gray-200"}`}
+            onClick={() => setTab("past")}
+          >
+            Past Listings
+          </button>
+
+        </div>
 
         <Notification
           type={message.type}
@@ -141,22 +214,7 @@ export default function NGO() {
 
         <div className="space-y-4">
 
-          {listings.map((listing) => (
-
-            <ListingCard
-              key={listing.id}
-              listing={listing}
-              canAccept
-              onAccept={handleAccept}
-            />
-
-          ))}
-
-          {listings.length === 0 && (
-            <p className="text-gray-600">
-              No available listings nearby.
-            </p>
-          )}
+          {renderListings()}
 
         </div>
 

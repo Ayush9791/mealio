@@ -1,3 +1,5 @@
+import { completeListing } from "../../../server/controllers/listingController";
+
 const runtimeEnvBase = import.meta.env.VITE_API_URL;
 
 const resolveApiBaseUrl = () => {
@@ -52,6 +54,7 @@ export const api = {
   createListing: (body) => request('/listing', { method: 'POST', body: JSON.stringify(body) }),
   getListings: () => request('/listings'),
   acceptListing: (body) => request('/accept-listing', { method: 'POST', body: JSON.stringify(body) }),
+  completeListing: (body) => request('/listing/complete', { method: 'POST', body: JSON.stringify(body) }),
 };
 
 export default api;
