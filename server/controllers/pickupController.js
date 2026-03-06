@@ -10,7 +10,7 @@ export const acceptListing = async (req, res) => {
   try {
     const result = await pool.query(
       `UPDATE food_listings
-       SET status = 'accepted', accepted_by_ngo_id = $1
+       SET status = 'accepted', accepted_by = $1
        WHERE id = $2 AND status = 'available'
        RETURNING *`,
       [req.user.id, listingId],
