@@ -25,7 +25,7 @@ export const createListing = async (req, res) => {
 export const getListings = async (_req, res) => {
   try {
     const result = await pool.query(
-      `SELECT id, restaurant_id, title, description, quantity_portions, expiry_time, latitude, longitude, status, accepted_by_ngo_id
+      `SELECT id, restaurant_id, title, description, quantity_portions, expiry_time, latitude, longitude, status, accepted_by
        FROM food_listings
        ORDER BY created_at DESC`,
     );
