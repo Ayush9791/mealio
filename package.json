@@ -1,0 +1,10 @@
+{
+  "name": "mealio-root",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "build": "npm --prefix client ci && npm --prefix client run build && rm -rf dist && cp -R client/dist dist",
+    "dev": "npm --prefix client run dev",
+    "preview": "npm --prefix client run preview"
+  }
+}

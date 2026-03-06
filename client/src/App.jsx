@@ -1,26 +1,44 @@
-import { useState } from 'react'
-import { BrowserRouter as Router, Routes, Route, BrowserRouter } from 'react-router-dom'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import Home from './pages/Home'
-import Restaurant from './pages/Restaurant'
-import NGO from './pages/NGO'
-import Login from './pages/login'
-import Signup from './pages/signup'
-import './index.css'
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import Home from './pages/Home';
+import Login from './pages/Login';
+import Signup from './pages/Signup';
+import NGO from './pages/NGO';
+import Restaurant from './pages/Restaurant';
 
-function App() {
+function ProtectedRoute({ allowedRoles, children }) {
+  const token = localStorage.getItem('mealio_token');
+  const role = localStorage.getItem('mealio_role');
+
+  if (!token) return <Navigate to="/login" replace />;
+  if (allowedRoles && !allowedRoles.includes(role)) return <Navigate to="/" replace />;
+
+  return children;
+}
+
+export default function App() {
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="/restaurant" element={<Restaurant />} />
-        <Route path="/ngo" element={<NGO />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
+        <Route
+          path="/restaurant"
+          element={(
+            <ProtectedRoute allowedRoles={['restaurant']}>
+              <Restaurant />
+            </ProtectedRoute>
+          )}
+        />
+        <Route
+          path="/ngo"
+          element={(
+            <ProtectedRoute allowedRoles={['ngo']}>
+              <NGO />
+            </ProtectedRoute>
+          )}
+        />
       </Routes>
     </BrowserRouter>
-  )
+  );
 }
-
-export default App
