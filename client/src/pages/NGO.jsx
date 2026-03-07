@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { MapPin, Navigation, Box, History, Clock } from "lucide-react";
 import Navbar from "../components/Navbar";
 import ListingCard from "../components/ListingCard";
 import Notification from "../components/Notification";
