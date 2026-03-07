@@ -30,6 +30,7 @@ export default function ListingCard({
       </div>
 
       <div className="mt-4 text-sm text-gray-700 grid md:grid-cols-2 gap-2">
+        <p><strong>Restaurant:</strong> {listing.restaurant_name}</p>
         <p><strong>Portions:</strong> {listing.quantity_portions}</p>
         <p><strong>Expiry:</strong> {new Date(listing.expiry_time).toLocaleString()}</p>
 
@@ -73,6 +74,10 @@ export default function ListingCard({
           >
             Mark Completed
           </button>
+        )}
+
+        {canComplete && listing.status === "accepted" && (
+          <p><strong>Accepted by:</strong> {listing.accepted_by}</p>
         )}
 
       </div>
