@@ -32,15 +32,18 @@ export default function NGO() {
   };
 
   const haversine = (lat1, lon1, lat2, lon2) => {
-    const R = 6371; // Radius of earth in km
+    const R = 6371;
     const dLat = ((lat2 - lat1) * Math.PI) / 180;
     const dLon = ((lon2 - lon1) * Math.PI) / 180;
+
     const a =
       Math.sin(dLat / 2) ** 2 +
       Math.cos((lat1 * Math.PI) / 180) *
         Math.cos((lat2 * Math.PI) / 180) *
         Math.sin(dLon / 2) ** 2;
+
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
     return R * c;
   };
 
@@ -55,11 +58,12 @@ export default function NGO() {
           distance: haversine(
             location.lat,
             location.lon,
-            listing.latitude,
-            listing.longitude
+            Number(listing.latitude),
+            Number(listing.longitude)
           ),
         }));
       }
+
       setListings(all);
     } catch (error) {
       setMessage({ type: "error", text: error.message });
@@ -94,9 +98,12 @@ export default function NGO() {
     }
   };
 
-  // --- FILTERING & SORTING LOGIC ---
   const availableListings = listings
-    .filter((l) => l.status === "available")
+    .filter(
+      (l) =>
+        l.status === "available" &&
+        new Date(l.expiry_time) > new Date()
+    )
     .sort((a, b) => (a.distance || 0) - (b.distance || 0));
 
   const acceptedListings = listings.filter(
@@ -107,79 +114,52 @@ export default function NGO() {
     (l) => l.status === "completed" || l.status === "expired"
   );
 
-  const renderListings = () => {
-    let data = [];
-    if (tab === "available") data = availableListings;
-    if (tab === "accepted") data = acceptedListings;
-    if (tab === "past") data = pastListings;
-
-    if (data.length === 0) {
-      return (
-        <div className="text-center py-20 bg-white rounded-2xl border border-dashed border-slate-300">
-          <Box className="mx-auto text-slate-300 mb-3" size={40} />
-          <p className="text-slate-500 font-medium">No listings found.</p>
-        </div>
-      );
-    }
-
-    return data.map((listing) => (
-      <div key={listing.id} className="transition-all hover:translate-x-1 duration-200">
-        <ListingCard
-          listing={listing}
-          canAccept={tab === "available"}
-          canComplete={tab === "accepted"}
-          onAccept={handleAccept}
-          onComplete={handleComplete}
-        />
-      </div>
-    ));
-  };
+  const currentListings =
+    tab === "available"
+      ? availableListings
+      : tab === "accepted"
+      ? acceptedListings
+      : pastListings;
 
   return (
     <div className="min-h-screen bg-[#fafafa] text-slate-900">
       <Navbar />
 
       <main className="max-w-5xl mx-auto px-6 py-12">
-        {/* Header Section */}
-        <header className="mb-10">
+        {/* Header */}
+        <div className="mb-10">
           <h1 className="text-3xl font-bold tracking-tight">NGO Dashboard</h1>
-          <p className="text-slate-500 mt-1">Discover surplus food nearby and manage your pickups.</p>
-        </header>
+          <p className="text-slate-500 mt-1">
+            Discover surplus food nearby and manage pickups.
+          </p>
+        </div>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
-          <StatCard 
-            label="Nearby Food Listings" 
-            value={availableListings.length} 
-            icon={<Navigation className="text-emerald-600" size={20} />} 
-          />
-          <StatCard 
-            label="Location Status" 
-            value={location ? "Detected" : "Searching..."} 
-            subText={location ? `${location.lat.toFixed(3)}, ${location.lon.toFixed(3)}` : "Please allow GPS access"}
-            icon={<MapPin className={location ? "text-blue-600" : "text-slate-300"} size={20} />} 
+        {/* Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+          <StatCard label="Nearby Listings" value={availableListings.length} />
+          <StatCard label="My Pickups" value={acceptedListings.length} />
+          <StatCard
+            label="Location"
+            value={location ? "Detected" : "Searching"}
           />
         </div>
 
-        {/* Segmented Tabs */}
+        {/* Tabs */}
         <div className="flex p-1 bg-slate-200/50 rounded-xl w-fit mb-10">
-          <TabBtn 
-            active={tab === "available"} 
-            onClick={() => setTab("available")} 
-            icon={<Box size={16}/>} 
-            label="Available" 
+          <TabBtn
+            active={tab === "available"}
+            onClick={() => setTab("available")}
+            label="Available"
           />
-          <TabBtn 
-            active={tab === "accepted"} 
-            onClick={() => setTab("accepted")} 
-            icon={<Clock size={16}/>} 
-            label="My Pickups" 
+          <TabBtn
+            active={tab === "accepted"}
+            onClick={() => setTab("accepted")}
+            label="My Pickups"
           />
-          <TabBtn 
-            active={tab === "past"} 
-            onClick={() => setTab("past")} 
-            icon={<History size={16}/>} 
-            label="History" 
+          <TabBtn
+            active={tab === "past"}
+            onClick={() => setTab("past")}
+            label="History"
           />
         </div>
 
@@ -189,43 +169,53 @@ export default function NGO() {
           onClose={() => setMessage({ type: "info", text: "" })}
         />
 
-        {/* List of Items */}
-        <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-500">
-          {renderListings()}
-        </div>
+        {/* Listings */}
+        <section className="space-y-4 animate-in fade-in duration-300">
+          {currentListings.length === 0 ? (
+            <div className="text-center py-20 bg-white rounded-2xl border border-dashed border-slate-300">
+              <p className="text-slate-400">No listings to show here yet.</p>
+            </div>
+          ) : (
+            currentListings.map((listing) => (
+              <div
+                key={listing.id}
+                className="transition-transform hover:translate-x-1 duration-200"
+              >
+                <ListingCard
+                  listing={listing}
+                  canAccept={tab === "available"}
+                  canComplete={tab === "accepted"}
+                  onAccept={handleAccept}
+                  onComplete={handleComplete}
+                />
+              </div>
+            ))
+          )}
+        </section>
       </main>
     </div>
   );
 }
 
-// --- REUSABLE UI COMPONENTS ---
-
-function StatCard({ label, value, subText, icon }) {
+function StatCard({ label, value }) {
   return (
-    <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
-      <div>
-        <p className="text-slate-500 text-sm font-medium mb-1">{label}</p>
-        <div className="flex items-baseline gap-2">
-          <p className="text-2xl font-bold text-slate-900">{value}</p>
-          {subText && <p className="text-xs font-mono text-slate-400 tracking-tighter">{subText}</p>}
-        </div>
-      </div>
-      <div className="bg-slate-50 p-3 rounded-xl">{icon}</div>
+    <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+      <p className="text-slate-500 text-sm font-medium">{label}</p>
+      <p className="text-3xl font-bold mt-1">{value}</p>
     </div>
   );
 }
 
-function TabBtn({ active, onClick, label, icon }) {
+function TabBtn({ active, onClick, label }) {
   return (
     <button
       onClick={onClick}
-      className={`flex items-center gap-2 px-6 py-2 rounded-lg text-sm font-bold transition-all ${
-        active 
-          ? "bg-white text-emerald-600 shadow-sm" 
-          : "text-slate-500 hover:text-slate-700 hover:bg-slate-200/20"
+      className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${
+        active
+          ? "bg-white text-emerald-600 shadow-sm"
+          : "text-slate-500 hover:text-slate-700"
       }`}
     >
-      {icon}
       {label}
     </button>
   );
