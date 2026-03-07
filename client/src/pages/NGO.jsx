@@ -75,7 +75,14 @@ export default function NGO() {
   }, []);
 
   useEffect(() => {
-    if (location) loadListings();
+    if (!location) return;
+    loadListings();
+
+    const interval = setInterval(() => {
+      loadListings();
+    }, 2000);
+
+    return () => clearInterval(interval);
   }, [location]);
 
   const handleAccept = async (listingId) => {
