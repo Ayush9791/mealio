@@ -32,21 +32,27 @@ export const createListing = async (req, res) => {
 export const getListings = async (_req, res) => {
   try {
 
-    const result = await pool.query(
-      `SELECT
-        id,
-        restaurant_id,
-        title,
-        description,
-        quantity_portions,
-        expiry_time,
-        latitude,
-        longitude,
-        status,
-        accepted_by
-      FROM food_listings
-      ORDER BY created_at DESC`
-    );
+    const result = await pool.query(`
+      SELECT
+      fl.id,
+      fl.restaurant_id,
+      r.name AS restaurant_name,
+      fl.title,
+      fl.description,
+      fl.quantity_portions,
+      fl.expiry_time,
+      fl.latitude,
+      fl.longitude,
+      fl.status,
+      fl.accepted_by,
+      ngo.name AS ngo_name
+      FROM food_listings fl
+      JOIN users r
+      ON r.id = fl.restaurant_id
+      LEFT JOIN users ngo
+      ON ngo.id = fl.accepted_by
+      ORDER BY fl.created_at DESC
+      `);
 
     return res.json({
       listings: result.rows
