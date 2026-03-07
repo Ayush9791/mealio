@@ -33,6 +33,7 @@ export default function ListingCard({
         <p><strong>Restaurant:</strong> {listing.restaurant_name}</p>
         <p><strong>Portions:</strong> {listing.quantity_portions}</p>
         <p><strong>Expiry:</strong> {new Date(listing.expiry_time).toLocaleString()}</p>
+        <p><strong>Accepted by:</strong> {listing.ngo_name}</p>
 
         {/* Distance if calculated in NGO dashboard */}
         {listing.distance && (
@@ -74,10 +75,6 @@ export default function ListingCard({
           >
             Mark Completed
           </button>
-        )}
-
-        {canComplete && listing.status === "accepted" && (
-          <p><strong>Accepted by:</strong> {listing.accepted_by}</p>
         )}
 
       </div>
