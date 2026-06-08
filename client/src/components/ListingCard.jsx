@@ -5,6 +5,8 @@ export default function ListingCard({
   canAccept = false,
   canComplete = false
 }) {
+  const mapsUrl = `https://www.google.com/maps?q=${listing.latitude},${listing.longitude}`;
+
   return (
     <div className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
 
@@ -28,10 +30,31 @@ export default function ListingCard({
       </div>
 
       <div className="mt-4 text-sm text-gray-700 grid md:grid-cols-2 gap-2">
+        <p><strong>Restaurant:</strong> {listing.restaurant_name}</p>
         <p><strong>Portions:</strong> {listing.quantity_portions}</p>
         <p><strong>Expiry:</strong> {new Date(listing.expiry_time).toLocaleString()}</p>
+        <p><strong>Accepted by:</strong> {listing.ngo_name}</p>
+
+        {/* Distance if calculated in NGO dashboard */}
+        {listing.distance && (
+          <p><strong>Distance:</strong> {listing.distance.toFixed(2)} km</p>
+        )}
+
+        {/* Debug info */}
         <p><strong>Latitude:</strong> {listing.latitude}</p>
         <p><strong>Longitude:</strong> {listing.longitude}</p>
+      </div>
+
+      {/* Navigation Button */}
+      <div className="mt-3">
+        <a
+          href={mapsUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-sm text-blue-600 font-semibold hover:underline"
+        >
+          Open in Google Maps
+        </a>
       </div>
 
       <div className="mt-4 flex gap-3">
